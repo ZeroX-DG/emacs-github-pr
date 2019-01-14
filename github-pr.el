@@ -62,7 +62,6 @@
   (local-set-key (kbd "q") 'kill-this-buffer))
 
 (defun github-pr-check-out-pr ()
-  (interactive)
   (let ((pr-index (- (string-to-number (format-mode-line "%l")) 1)))
     (let ((selected-pr (nth pr-index github-pr-pr-list)))
       (let ((number (assoc-recursive selected-pr 'number))
@@ -118,6 +117,7 @@
 
 (defun github-pr-start (&optional repo remote)
   "Fetch all PRs in repo"
+  (interactive)
   (if (not repo)
       (github-pr-find-repo)
     (setq github-pr-current-repo repo))
@@ -127,6 +127,5 @@
       (github-pr-fetch-prs remote)
       (github-pr-display-pr-list))))
 
-(github-pr-start "~/Desktop/Projects/Boostnote" "upstream")
-
+(provide 'github-pr)
 ;;; github-pr.el ends here
