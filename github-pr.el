@@ -39,13 +39,23 @@
   (let ((git-repo github-pr-current-repo))
     (dolist (remote (git-remotes))
       (github-pr-fetch-prs remote))
-    (github-pr-pick-and-check-out-pr)))
+    (github-pr-display-pr-list)))
 
-(defun github-pr-pick-and-check-out-pr ()
-  (interactive)
-  (setq pr (car github-pr-pr-list))
-  (let ((choices (mapcar (lambda (pr) (assoc-recursive pr 'title)) github-pr-pr-list)))
-    (message "%s" (ido-completing-read "Checkout PR: " choices))))
+(defun github-pr-display-pr-list ()
+  (switch-to-buffer "Github PRs")
+  (erase-buffer)
+  (mapcar (lambda (pr)
+	    (let ((number (concat "[#" (number-to-string (assoc-recursive pr 'number)) "]"))
+		  (title (assoc-recursive pr 'title))
+		  (creator (concat "<" (assoc-recursive pr 'creator) ">")))
+	      (insert
+	       (concat
+		(propertize number 'font-lock-face '(:foreground "IndianRed1"))
+		" -- "
+		(propertize creator 'font-lock-face '(:foreground "DodgerBlue1"))
+		" "
+		title
+		"\n")))) github-pr-pr-list))
 
 (defun github-pr-fetch-prs (remote)
   "Fetch all PRs from a remote and save to central list"
