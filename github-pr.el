@@ -43,20 +43,22 @@
 
 (defun github-pr-pick-and-check-out-pr ()
   (interactive)
-  (let ((choices (mapcar (lambda (pr) (cdr (assoc 'title pr))))))
+  (setq pr (car github-pr-pr-list))
+  (let ((choices (mapcar (lambda (pr) (assoc-recursive pr 'title)) github-pr-pr-list)))
     (message "%s" (ido-completing-read "Checkout PR: " choices))))
 
 (defun github-pr-fetch-prs (remote)
   "Fetch all PRs from a remote and save to central list"
   (let ((api (github-pr-get-api-by-remote remote)))
-    (request api
-	     :params '(("state" . "open"))
-	     :headers '(("Content-Type" . "application/json"))
-	     :parser 'json-read
-	     :error (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
-				   (message "Got error: %S" error-thrown)))
-	     :success (cl-function (lambda (&key data &allow-other-keys)
-				     (github-pr-add-prs-to-list data))))))
+    (when (string-prefix-p "http" api)
+      (request api
+	       :params '(("state" . "open"))
+	       :headers '(("Content-Type" . "application/json"))
+	       :parser 'json-read
+	       :error (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
+				     (message "Got error: %S" error-thrown)))
+	       :success (cl-function (lambda (&key data &allow-other-keys)
+				       (github-pr-add-prs-to-list data)))))))
 
 (defun github-pr-add-prs-to-list (prs)
   "Add pr into pr list"
@@ -64,10 +66,10 @@
   (let ((pr-index 0))
     (while (< pr-index (length prs))
       (let ((pr (aref prs pr-index)))
-	(setq github-pr-pr-list (append github-pr-pr-list (list (cons "title" (assoc-recursive pr 'title))
-								(cons "number" (assoc-recursive pr 'number))
-								(cons "creator" (assoc-recursive pr 'user 'login))
-								(cons "body" (assoc-recursive pr 'body))))))
+	(setq github-pr-pr-list (append github-pr-pr-list (list (list (cons 'title (assoc-recursive pr 'title))
+								(cons 'number (assoc-recursive pr 'number))
+								(cons 'creator (assoc-recursive pr 'user 'login))
+								(cons 'body (assoc-recursive pr 'body)))))))
       (setq pr-index (1+ pr-index)))))
 
 (defun assoc-recursive (alist &rest keys)
@@ -87,9 +89,11 @@
 		   (repo (match-string 2 remote-url)))
 	       (concat "https://api.github.com/repos/" owner "/" repo "/pulls")))))))
 
-(defun github-pr-start ()
+(defun github-pr-start (&optional repo)
   "Fetch all PRs in repo"
-  (github-pr-find-repo)
+  (if (not repo)
+      (github-pr-find-repo)
+    (setq github-pr-current-repo repo))
   (when (not (equal github-pr-current-repo ""))
     (github-pr-fetch-all-prs)))
   
