@@ -25,12 +25,14 @@
 (defun github-pr-find-repo ()
   "let user pick other repo if the current directory is not a repo"
   (let ((current-dir (file-name-directory (buffer-file-name (window-buffer (minibuffer-selected-window))))))
-    (when (not (git-repo? current-dir))
-      (interactive)
-      (setq user-repo-input (read-directory-name "Github repo: "))
-      (if (not (git-repo? user-repo-input))
-	  (message "%s is not a git repo" user-repo-input)
-	(setq github-pr-current-repo user-repo-input)))))
+    (if (not (git-repo? current-dir))
+	(progn
+	  (interactive)
+	  (setq user-repo-input (read-directory-name "Github repo: "))
+	  (if (not (git-repo? user-repo-input))
+	      (message "%s is not a git repo" user-repo-input)
+	    (setq github-pr-current-repo user-repo-input)))
+      (setq github-pr-current-repo current-dir))))
 
 (defun github-pr-fetch-all-prs ()
   (message "Fetching all pull requests")
