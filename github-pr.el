@@ -47,22 +47,40 @@
   (mapcar (lambda (pr)
 	    (let ((number (concat "[#" (number-to-string (assoc-recursive pr 'number)) "]"))
 		  (title (assoc-recursive pr 'title))
-		  (creator (concat "<" (assoc-recursive pr 'creator) ">")))
+		  (creator (concat "<" (assoc-recursive pr 'creator) ">"))
+		  (remote (assoc-recursive pr 'remote)))
 	      (insert
 	       (concat
 		(propertize number 'font-lock-face '(:foreground "IndianRed1"))
 		" -- "
 		(propertize creator 'font-lock-face '(:foreground "DodgerBlue1"))
-		" "
+		":"
 		title
-		"\n")))) github-pr-pr-list))
+		"\n")))) github-pr-pr-list)
+  (toggle-read-only)
+  (local-set-key (kbd "c") 'github-pr-check-out-pr)
+  (local-set-key (kbd "q") 'kill-this-buffer))
+
+(defun github-pr-check-out-pr ()
+  (interactive)
+  (let ((pr-index (- (string-to-number (format-mode-line "%l")) 1)))
+    (let ((selected-pr (nth pr-index github-pr-pr-list)))
+      (let ((number (assoc-recursive selected-pr 'number))
+	    (creator (assoc-recursive selected-pr 'creator)))
+	(let ((git-repo github-pr-current-repo)
+	      (branch (concat "pr/" creator "/" (number-to-string number)))
+	      (ref (concat "pull/" (number-to-string number) "/head")))
+	  (git-run "fetch" "upstream" (concat ref ":" branch))
+	  (git-checkout branch)
+	  (message "fetched PR to: %s" branch))))))
 
 (defun github-pr-fetch-prs (remote)
   "Fetch all PRs from a remote and save to central list"
   (let ((api (github-pr-get-api-by-remote remote)))
     (when (string-prefix-p "http" api)
       (request api
-	       :params '(("state" . "open"))
+	       :params '(("state" . "open")
+			 ("access_token" . "0fdd5e1c9f5afb3b148bce6ef3f666360b8f8238"))
 	       :headers '(("Content-Type" . "application/json"))
 	       :parser 'json-read
 	       :error (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
@@ -77,9 +95,9 @@
     (while (< pr-index (length prs))
       (let ((pr (aref prs pr-index)))
 	(setq github-pr-pr-list (append github-pr-pr-list (list (list (cons 'title (assoc-recursive pr 'title))
-								(cons 'number (assoc-recursive pr 'number))
-								(cons 'creator (assoc-recursive pr 'user 'login))
-								(cons 'body (assoc-recursive pr 'body)))))))
+								      (cons 'number (assoc-recursive pr 'number))
+								      (cons 'creator (assoc-recursive pr 'user 'login))
+								      (cons 'body (assoc-recursive pr 'body)))))))
       (setq pr-index (1+ pr-index)))))
 
 (defun assoc-recursive (alist &rest keys)
@@ -107,6 +125,6 @@
   (when (not (equal github-pr-current-repo ""))
     (github-pr-fetch-all-prs)))
   
-(github-pr-start)
+(github-pr-start "~/Desktop/Projects/Boostnote")
 
 ;;; github-pr.el ends here
