@@ -36,9 +36,10 @@
 
 (defun github-pr-fetch-all-prs ()
   (message "Fetching all pull requests")
-  (dolist (remote (git-remotes))
-    (github-pr-fetch-prs remote))
-  (github-pr-pick-and-check-out-pr))
+  (let ((git-repo github-pr-current-repo))
+    (dolist (remote (git-remotes))
+      (github-pr-fetch-prs remote))
+    (github-pr-pick-and-check-out-pr)))
 
 (defun github-pr-pick-and-check-out-pr ()
   (interactive)
@@ -78,11 +79,13 @@
 (defun github-pr-get-api-by-remote (remote)
   "Get api url of the specified remote"
   ;; api url syntax: https://api.github.com/repos/<owner>/<repo>/pulls
-  (save-match-data
-    (and (string-match "^https?://github.com/\\(.*?\\)/\\(.*?\\).git" remote)
-	 (let ((owner (match-string 1 remote))
-	       (repo (match-string 2 remote)))
-	   (concat "https://api.github.com/repos/" owner "/" repo "/pulls")))))
+  (let ((git-repo github-pr-current-repo))
+    (let ((remote-url (git-run "config" "--get" (concat "remote." remote ".url"))))
+      (save-match-data
+	(and (string-match "^https?://github.com/\\(.*?\\)/\\(.*?\\).git" remote-url)
+	     (let ((owner (match-string 1 remote-url))
+		   (repo (match-string 2 remote-url)))
+	       (concat "https://api.github.com/repos/" owner "/" repo "/pulls")))))))
 
 (defun github-pr-start ()
   "Fetch all PRs in repo"
@@ -91,4 +94,5 @@
     (github-pr-fetch-all-prs)))
   
 (github-pr-start)
+
 ;;; github-pr.el ends here
