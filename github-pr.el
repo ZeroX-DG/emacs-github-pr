@@ -62,6 +62,7 @@
   (local-set-key (kbd "q") 'kill-this-buffer))
 
 (defun github-pr-check-out-pr ()
+  (interactive)
   (let ((pr-index (- (string-to-number (format-mode-line "%l")) 1)))
     (let ((selected-pr (nth pr-index github-pr-pr-list)))
       (let ((number (assoc-recursive selected-pr 'number))
@@ -115,17 +116,16 @@
 		   (repo (match-string 2 remote-url)))
 	       (concat "https://api.github.com/repos/" owner "/" repo "/pulls")))))))
 
-(defun github-pr-start (&optional repo remote)
-  "Fetch all PRs in repo"
+(defun github-pr-start ()
+  "Start github pr process"
   (interactive)
-  (if (not repo)
-      (github-pr-find-repo)
-    (setq github-pr-current-repo repo))
-  (when (not (equal github-pr-current-repo ""))
-    (if (not remote)
-	(github-pr-fetch-all-prs)
-      (github-pr-fetch-prs remote)
-      (github-pr-display-pr-list))))
+  (github-pr-find-repo)
+  (let ((remote (read-string "Enter the remote(leave blank to get all PR):")))
+    (when (not (equal github-pr-current-repo ""))
+      (if (equal remote "")
+	  (github-pr-fetch-all-prs)
+	(github-pr-fetch-prs remote)
+	(github-pr-display-pr-list)))))
 
 (provide 'github-pr)
 ;;; github-pr.el ends here

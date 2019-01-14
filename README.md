@@ -1,5 +1,9 @@
 # github-pr
 
+<p align="center">
+	<img src="assets/demo.gif" width="80%" />
+</p>
+
 ## About this project
 github-pr is a simple emacs package for easier reviewing Github PR without leaving emacs. This also the project that I used to learn elisp (I created this package after learned about elisp for a few hours so I'm not sure if this project will survive :smile:)
 
