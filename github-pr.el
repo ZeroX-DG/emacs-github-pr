@@ -54,7 +54,7 @@
 		(propertize number 'font-lock-face '(:foreground "IndianRed1"))
 		" -- "
 		(propertize creator 'font-lock-face '(:foreground "DodgerBlue1"))
-		":"
+		": "
 		title
 		"\n")))) github-pr-pr-list)
   (toggle-read-only)
@@ -79,8 +79,7 @@
   (let ((api (github-pr-get-api-by-remote remote)))
     (when (string-prefix-p "http" api)
       (request api
-	       :params '(("state" . "open")
-			 ("access_token" . "0fdd5e1c9f5afb3b148bce6ef3f666360b8f8238"))
+	       :params '(("state" . "open"))
 	       :headers '(("Content-Type" . "application/json"))
 	       :parser 'json-read
 	       :error (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
@@ -117,14 +116,17 @@
 		   (repo (match-string 2 remote-url)))
 	       (concat "https://api.github.com/repos/" owner "/" repo "/pulls")))))))
 
-(defun github-pr-start (&optional repo)
+(defun github-pr-start (&optional repo remote)
   "Fetch all PRs in repo"
   (if (not repo)
       (github-pr-find-repo)
     (setq github-pr-current-repo repo))
   (when (not (equal github-pr-current-repo ""))
-    (github-pr-fetch-all-prs)))
-  
-(github-pr-start "~/Desktop/Projects/Boostnote")
+    (if (not remote)
+	(github-pr-fetch-all-prs)
+      (github-pr-fetch-prs remote)
+      (github-pr-display-pr-list))))
+
+(github-pr-start "~/Desktop/Projects/Boostnote" "upstream")
 
 ;;; github-pr.el ends here

@@ -5,7 +5,8 @@ github-pr is a simple emacs package for easier reviewing Github PR without leavi
 
 ## Todo
 - [x] List all PRs in menu for user to pick
-- [ ] Checkout PR
+- [x] Checkout PR
+- [ ] Show PR body with <TAB> key
 - [ ] Maybe add comment on PR if that possible :smile:
 - [ ] Label a PR is also a good feature
 - [ ] I can't think of anything else
